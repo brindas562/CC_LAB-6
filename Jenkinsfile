@@ -28,7 +28,7 @@ pipeline {
                   --network app-network \
                   backend-app
 
-                # Give backend a small delay to fully start
+                # wait for backend to fully start
                 sleep 3
                 '''
             }
@@ -43,8 +43,16 @@ pipeline {
                   --name nginx-lb \
                   --network app-network \
                   -p 80:80 \
-                  -v $(pwd)/nginx/default.conf:/etc/nginx/conf.d/default.conf \
                   nginx
+
+                # wait for nginx to initialize
+                sleep 2
+
+                # copy correct config
+                docker cp nginx/default.conf nginx-lb:/etc/nginx/conf.d/default.conf
+
+                # restart nginx inside container safely
+                docker exec nginx-lb nginx -s reload || true
                 '''
             }
         }
